@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meu Catálogo de Músicas</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Meu Catálogo de Músicas</h1>
+        
+        <div class="menu-navegacao">
+            <button onclick="mostrarBusca()">🔍 Buscar Músicas</button>
+            <button onclick="mostrarFavoritos()">❤️ Minhas Favoritas</button>
+        </div>
+
+        <div id="secaoBusca">
+            <div class="busca-box">
+                <input type="text" id="campoBusca" placeholder="Digite o nome da música ou artista...">
+                <button onclick="buscar()">Pesquisar</button>
+            </div>
+            <div id="resultados" class="grid-musicas"></div>
+        </div>
+
+        <div id="secaoFavoritos" style="display: none;">
+            <h2>Músicas Salvas</h2>
+            <div id="listaFavoritos" class="grid-musicas"></div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

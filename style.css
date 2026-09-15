@@ -1,0 +1,115 @@
+body {
+    font-family: Arial, sans-serif;
+    background-color: #121212;
+    color: #ffffff;
+    margin: 0;
+    padding: 20px;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+}
+
+h1, h2 {
+    text-align: center;
+}
+
+.menu-navegacao {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+.menu-navegacao button {
+    background-color: #282828;
+}
+
+.menu-navegacao button:hover {
+    background-color: #3e3e3e;
+}
+
+.busca-box {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 30px;
+}
+
+input {
+    flex: 1;
+    padding: 12px;
+    border-radius: 6px;
+    border: none;
+    font-size: 16px;
+}
+
+button {
+    padding: 12px 20px;
+    background-color: #1db954;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+button:hover {
+    background-color: #1ed760;
+}
+
+.grid-musicas {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.card-musica {
+    background-color: #181818;
+    padding: 15px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+}
+
+.card-musica img {
+    width: 100%;
+    border-radius: 6px;
+    margin-bottom: 10px;
+}
+
+.card-musica h3 {
+    font-size: 15px;
+    margin: 5px 0;
+}
+
+.card-musica p {
+    font-size: 13px;
+    color: #b3b3b3;
+    margin-bottom: 10px;
+}
+
+audio {
+    width: 100%;
+    margin-bottom: 10px;
+}
+
+.btn-favoritar {
+    width: 100%;
+    background-color: #333;
+}
+
+.btn-favoritar:hover {
+    background-color: #555;
+}
+
+.btn-remover {
+    width: 100%;
+    background-color: #e74c3c;
+}
+
+.btn-remover:hover {
+    background-color: #c0392b;
+}

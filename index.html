@@ -32,7 +32,7 @@
         <main id="secaoBusca" class="secao-view">
             <div class="busca-wrapper">
                 <div class="busca-box">
-                    <input type="text" id="campoBusca" placeholder="Digite uma música, artista ou álbum..." autocomplete="off" oninput="lidarComInputBusca(event)">
+                    <input type="text" id="campoBusca" placeholder="Digite uma música, artista ou álbum..." autocomplete="off">
                     <button onclick="buscar()">Pesquisar</button>
                 </div>
                 <!-- Menu de Sugestões Instantâneas (Autocomplete) -->
@@ -92,27 +92,28 @@
                     <div class="carrossel-linha" id="lancamentos"></div>
                 </div>
             </div>
-            <!-- VISÃO: DETALHES DO ARTISTA -->
-<section id="secaoArtistaDetalhe" class="secao-view" style="display: none;">
-    <button class="btn-voltar" onclick="voltarParaBusca()">← Voltar</button>
-    
-    <div id="artistaHeaderContainer" class="album-header">
-        <!-- Preenchido via JavaScript -->
-    </div>
-
-    <div class="detalhes-conteudo">
-        <h3>Músicas Mais Populares</h3>
-        <div id="artistaTopTracksList" class="album-tracks-list">
-            <!-- Preenchido via JavaScript -->
-        </div>
-
-        <h3 style="margin-top: 2rem;">Álbuns</h3>
-        <div id="artistaAlbumsGrid" class="carrossel-container">
-            <!-- Preenchido via JavaScript -->
-        </div>
-    </div>
-</section>
         </main>
+
+        <!-- VISÃO: DETALHES DO ARTISTA -->
+        <section id="secaoArtistaDetalhe" class="secao-view" style="display: none;">
+            <button class="btn-voltar" onclick="voltarParaBusca()">← Voltar</button>
+
+            <div id="artistaHeaderContainer" class="album-header">
+                <!-- Preenchido via JavaScript -->
+            </div>
+
+            <div class="detalhes-conteudo">
+                <h3>Músicas Mais Populares</h3>
+                <div id="artistaTopTracksList" class="album-tracks-list">
+                    <!-- Preenchido via JavaScript -->
+                </div>
+
+                <h3 style="margin-top: 2rem;">Álbuns</h3>
+                <div id="artistaAlbumsGrid" class="carrossel-container">
+                    <!-- Preenchido via JavaScript -->
+                </div>
+            </div>
+        </section>
 
         <!-- SEÇÃO: DETALHES DA MÚSICA & LETRA -->
         <section id="secaoMusicaDetalhe" class="secao-view" style="display: none;">

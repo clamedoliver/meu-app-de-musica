@@ -1,24 +1,57 @@
-let avaliacoes = JSON.parse(localStorage.getItem('avaliacoesMusicais')) || [];
-let perfilUsuario = JSON.parse(localStorage.getItem('perfilUsuario')) || {
+function carregarLS(chave, padrao) {
+    try {
+        const bruto = localStorage.getItem(chave);
+        return bruto ? JSON.parse(bruto) : padrao;
+    } catch (e) {
+        console.error(`Dado corrompido em "${chave}", usando padrão.`, e);
+        return padrao;
+    }
+}
+
+function esc(v) {
+    return String(v ?? '').replace(/[&<>"']/g, c =>
+        ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+const cacheMusicas = new Map();
+
+function abrirModalAvaliarPorId(id) {
+    const musica = cacheMusicas.get(id);
+    if (musica) abrirModalAvaliar(musica);
+}
+
+let avaliacoes = carregarLS('avaliacoesMusicais', []);
+let perfilUsuario = carregarLS('perfilUsuario', {
     nome: "Seu Nome",
     bio: "Seu diário pessoal de música.",
     avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80"
-};
-let comentariosMusicas = JSON.parse(localStorage.getItem('comentariosMusicas')) || {};
+});
+let comentariosMusicas = carregarLS('comentariosMusicas', {});
 
 let musicaAtualParaAvaliar = null;
 let notaSelecionada = 0;
 let musicaDetalheAtual = null;
 let albumIdAtual = null;
-let secaoAnterior = 'home';
+let pilhaNavegacao = [];
 let timeoutBusca = null;
+let ultimaBusca = '';
 
 function fazerRequisicaoDeezer(endpoint) {
     return new Promise((resolve) => {
         const callbackName = 'deezer_cb_' + Math.random().toString(36).substring(2, 15);
         const script = document.createElement('script');
 
+        const timer = setTimeout(() => {
+            delete window[callbackName];
+            if (document.body.contains(script)) {
+                document.body.removeChild(script);
+            }
+            console.error(`Timeout no endpoint: ${endpoint}`);
+            resolve(null);
+        }, 10000);
+
         window[callbackName] = function(data) {
+            clearTimeout(timer);
             delete window[callbackName];
             if (document.body.contains(script)) {
                 document.body.removeChild(script);
@@ -30,6 +63,7 @@ function fazerRequisicaoDeezer(endpoint) {
         script.src = `https://api.deezer.com/${endpoint}${separador}output=jsonp&callback=${callbackName}`;
         
         script.onerror = function() {
+            clearTimeout(timer);
             delete window[callbackName];
             if (document.body.contains(script)) {
                 document.body.removeChild(script);
@@ -88,9 +122,16 @@ function configurarMonitoramentoCampoBusca() {
 }
 
 function salvarDados() {
-    localStorage.setItem('avaliacoesMusicais', JSON.stringify(avaliacoes));
-    localStorage.setItem('perfilUsuario', JSON.stringify(perfilUsuario));
-    localStorage.setItem('comentariosMusicas', JSON.stringify(comentariosMusicas));
+    try {
+        localStorage.setItem('avaliacoesMusicais', JSON.stringify(avaliacoes));
+        localStorage.setItem('perfilUsuario', JSON.stringify(perfilUsuario));
+        localStorage.setItem('comentariosMusicas', JSON.stringify(comentariosMusicas));
+        return true;
+    } catch (e) {
+        console.error('Falha ao salvar no localStorage:', e);
+        alert('Não foi possível salvar. O armazenamento do navegador está cheio — tente uma foto de perfil menor.');
+        return false;
+    }
 }
 
 function carregarPerfilHeader() {
@@ -101,6 +142,7 @@ function carregarPerfilHeader() {
 }
 
 function navegarPara(secao) {
+    pilhaNavegacao = [];
     document.querySelectorAll('.secao-view').forEach(el => el.style.display = 'none');
     document.querySelectorAll('.menu-navegacao button').forEach(el => el.classList.remove('active'));
 
@@ -228,7 +270,8 @@ async function buscar() {
     const campo = document.getElementById('campoBusca');
     if (!campo) return;
     const query = campo.value.trim();
-    
+    ultimaBusca = query;
+
     if (!query) {
         restaurarHome();
         return;
@@ -248,8 +291,13 @@ async function buscar() {
     grid.innerHTML = '<p style="color: var(--texto-secundario); grid-column: 1/-1;">Buscando músicas e artistas...</p>';
     grid.style.display = 'grid';
 
-    const dataTracks = await fazerRequisicaoDeezer(`search?q=${encodeURIComponent(query)}`);
-    const dataArtists = await fazerRequisicaoDeezer(`search/artist?q=${encodeURIComponent(query)}`);
+    document.getElementById('abaMusicas')?.classList.add('ativa');
+    document.getElementById('abaAlbuns')?.classList.remove('ativa');
+
+    const [dataTracks, dataArtists] = await Promise.all([
+        fazerRequisicaoDeezer(`search?q=${encodeURIComponent(query)}`),
+        fazerRequisicaoDeezer(`search/artist?q=${encodeURIComponent(query)}`)
+    ]);
 
     grid.innerHTML = '';
 
@@ -272,10 +320,10 @@ async function buscar() {
 
         cardArt.innerHTML = `
             <div style="display:flex; align-items:center; gap:1.2rem;">
-                <img src="${art.picture_medium || art.picture}" style="width:90px; height:90px; border-radius:50%; object-fit:cover; box-shadow: 0 4px 10px rgba(0,0,0,0.4);" alt="${art.name}">
+                <img src="${art.picture_medium || art.picture}" style="width:90px; height:90px; border-radius:50%; object-fit:cover; box-shadow: 0 4px 10px rgba(0,0,0,0.4);" alt="${esc(art.name)}">
                 <div>
                     <span style="background: var(--cor-principal, #8a2be2); color: #fff; font-size: 0.7rem; padding: 2px 8px; border-radius: 12px; text-transform: uppercase; font-weight: bold;">Artista Principal</span>
-                    <h2 style="margin: 0.4rem 0 0.2rem 0; font-size: 1.5rem; color: #fff;">${art.name}</h2>
+                    <h2 style="margin: 0.4rem 0 0.2rem 0; font-size: 1.5rem; color: #fff;">${esc(art.name)}</h2>
                     <p style="color: var(--texto-secundario, #a6a3b5); font-size: 0.85rem; margin: 0;">${art.nb_fan ? art.nb_fan.toLocaleString('pt-BR') + ' fãs no Deezer' : 'Clique para ver o perfil completo e álbuns'}</p>
                     <span style="color: var(--cor-principal, #8a2be2); font-size: 0.85rem; display: inline-block; margin-top: 0.4rem; font-weight: 500;">Ver todos os álbuns e músicas →</span>
                 </div>
@@ -293,23 +341,26 @@ async function buscar() {
 }
 
 function criarCardMusica(item) {
+    cacheMusicas.set(item.id, item);
+
     const div = document.createElement('div');
     div.className = 'card-musica';
     const aval = avaliacoes.find(a => a.id === item.id);
     const estrelas = aval ? '★'.repeat(aval.nota) + '☆'.repeat(5 - aval.nota) : '';
 
     const capaUrl = (item.album?.cover_medium || item.cover_medium || '').replace('http://', 'https://');
+    const nomeArtista = item.artist?.name || 'Artista';
 
     div.innerHTML = `
         <div class="capa-container" onclick="abrirDetalhesMusica(${item.id})">
             <img src="${capaUrl}" alt="Capa">
             ${item.explicit_lyrics ? '<span class="badge-explicit">EXPLICIT</span>' : ''}
         </div>
-        <h3 onclick="abrirDetalhesMusica(${item.id})">${item.title}</h3>
-        <p class="artista-nome" onclick="abrirDetalhesArtistaPorId(${item.artist?.id}, '${(item.artist?.name || '').replace(/'/g, "\\'")}')" style="cursor:pointer; text-decoration:underline;">${item.artist?.name || 'Artista'}</p>
+        <h3 onclick="abrirDetalhesMusica(${item.id})">${esc(item.title)}</h3>
+        <p class="artista-nome" onclick="abrirDetalhesArtistaPorId(${item.artist?.id}, '${esc(nomeArtista).replace(/'/g, "\\'")}')" style="cursor:pointer; text-decoration:underline;">${esc(nomeArtista)}</p>
         <audio controls src="${item.preview || ''}"></audio>
         ${aval ? `<div class="estrelas-exibicao" style="color: var(--cor-dourado, #ffd700); margin-top: 5px;">${estrelas}</div>` : ''}
-        <button style="margin-top: 8px;" onclick="abrirModalAvaliar(${JSON.stringify(item).replace(/"/g, '&quot;')})">
+        <button style="margin-top: 8px;" onclick="abrirModalAvaliarPorId(${item.id})">
             ${aval ? 'Editar Avaliação' : 'Avaliar / Fazer Review'}
         </button>
     `;
@@ -361,10 +412,10 @@ async function abrirDetalhesArtistaPorId(artistId, artistName) {
         <button class="btn-voltar" onclick="voltarParaOrigem()" style="margin-bottom: 1rem; cursor: pointer; padding: 8px 16px; border-radius: 8px; border: none; background: rgba(255,255,255,0.1); color: #fff;">← Voltar</button>
         
         <div id="artistaHeaderContainer" style="display: flex; align-items: center; gap: 1.5rem; background: rgba(255,255,255,0.05); padding: 1.5rem; border-radius: 12px; margin-bottom: 2rem;">
-            <img src="${artista.picture_big || artista.picture_medium || artista.picture}" style="border-radius: 50%; width: 140px; height: 140px; object-fit: cover;" alt="${artista.name}">
+            <img src="${artista.picture_big || artista.picture_medium || artista.picture}" style="border-radius: 50%; width: 140px; height: 140px; object-fit: cover;" alt="${esc(artista.name)}">
             <div>
                 <span style="background: var(--cor-principal, #8a2be2); color: #fff; font-size: 0.75rem; padding: 3px 10px; border-radius: 12px; text-transform: uppercase; font-weight: bold;">Artista</span>
-                <h1 style="font-size: 2.2rem; margin: 0.5rem 0; color: #fff;">${artista.name}</h1>
+                <h1 style="font-size: 2.2rem; margin: 0.5rem 0; color: #fff;">${esc(artista.name)}</h1>
                 <p style="color: var(--texto-secundario, #a6a3b5); margin: 0;">${artista.nb_fan ? artista.nb_fan.toLocaleString('pt-BR') + ' fãs no Deezer' : ''}</p>
             </div>
         </div>
@@ -397,8 +448,8 @@ async function abrirDetalhesArtistaPorId(artistId, artistName) {
                     <div style="display: flex; align-items: center; gap: 12px; flex: 1; cursor: pointer;" onclick="abrirDetalhesMusica(${t.id})">
                         <span style="color: #888; font-weight: bold;">${index + 1}</span>
                         <div>
-                            <h4 style="color: #fff; margin: 0; font-size: 0.95rem;">${t.title}</h4>
-                            <p style="color: #aaa; margin: 0; font-size: 0.8rem;">${t.album?.title || ''}</p>
+                            <h4 style="color: #fff; margin: 0; font-size: 0.95rem;">${esc(t.title)}</h4>
+                            <p style="color: #aaa; margin: 0; font-size: 0.8rem;">${esc(t.album?.title || '')}</p>
                         </div>
                     </div>
                     <audio controls src="${t.preview || ''}" style="height: 30px; max-width: 200px;"></audio>
@@ -425,8 +476,8 @@ async function abrirDetalhesArtistaPorId(artistId, artistName) {
                 card.style.cssText = 'cursor: pointer; background: rgba(255,255,255,0.05); padding: 10px; border-radius: 10px; text-align: left;';
                 card.innerHTML = `
                     <img src="${alb.cover_medium || alb.cover}" style="width: 100%; border-radius: 8px; aspect-ratio: 1; object-fit: cover;" alt="Capa">
-                    <h4 style="color: #fff; margin: 8px 0 2px 0; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${alb.title}</h4>
-                    <p style="color: #aaa; margin: 0; font-size: 0.75rem;">${alb.record_type ? alb.record_type.toUpperCase() : 'ÁLBUM'}</p>
+                    <h4 style="color: #fff; margin: 8px 0 2px 0; font-size: 0.9rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${esc(alb.title)}</h4>
+                    <p style="color: #aaa; margin: 0; font-size: 0.75rem;">${esc(alb.record_type ? alb.record_type.toUpperCase() : 'ÁLBUM')}</p>
                 `;
                 gridAlbums.appendChild(card);
             });
@@ -435,25 +486,29 @@ async function abrirDetalhesArtistaPorId(artistId, artistName) {
 }
 
 function salvarSecaoAnterior() {
-    const secoes = ['secaoBusca', 'secaoFavoritos', 'secaoPerfil', 'secaoArtistaDetalhe', 'secaoAlbumDetalhe'];
-    for (let id of secoes) {
+    const secoes = ['secaoBusca', 'secaoFavoritos', 'secaoPerfil',
+                     'secaoArtistaDetalhe', 'secaoAlbumDetalhe', 'secaoMusicaDetalhe'];
+    const atual = secoes.find(id => {
         const el = document.getElementById(id);
-        if (el && el.style.display !== 'none') {
-            secaoAnterior = id;
-            break;
-        }
-    }
+        return el && el.style.display !== 'none';
+    });
+    if (atual) pilhaNavegacao.push(atual);
 }
 
 function voltarParaOrigem() {
     document.querySelectorAll('.secao-view').forEach(el => el.style.display = 'none');
-    
-    const elAnterior = document.getElementById(secaoAnterior);
-    if (elAnterior && secaoAnterior !== 'secaoMusicaDetalhe') {
+
+    const anteriorId = pilhaNavegacao.pop();
+    const elAnterior = anteriorId && document.getElementById(anteriorId);
+    if (elAnterior) {
         elAnterior.style.display = 'block';
     } else {
         restaurarHome();
     }
+}
+
+function voltarParaBusca() {
+    voltarParaOrigem();
 }
 
 async function abrirDetalhesMusica(id) {
@@ -551,8 +606,8 @@ async function abrirDetalhesAlbumPorId(albumId) {
             <img src="${capaUrl}" class="album-cover-lg" alt="Capa Álbum">
             <div class="album-info-details">
                 <span class="badge-tag">Álbum</span>
-                <h2>${album.title}</h2>
-                <p>Por <span style="cursor:pointer; text-decoration:underline;" onclick="abrirDetalhesArtistaPorId(${album.artist?.id}, '${(album.artist?.name || '').replace(/'/g, "\\'")}')">${album.artist?.name || 'Artista'}</span> • ${album.nb_tracks || 0} faixas</p>
+                <h2>${esc(album.title)}</h2>
+                <p>Por <span style="cursor:pointer; text-decoration:underline;" onclick="abrirDetalhesArtistaPorId(${album.artist?.id}, '${esc(album.artist?.name || '').replace(/'/g, "\\'")}')">${esc(album.artist?.name || 'Artista')}</span> • ${album.nb_tracks || 0} faixas</p>
             </div>
         `;
     }
@@ -568,8 +623,8 @@ async function abrirDetalhesAlbumPorId(albumId) {
         row.innerHTML = `
             <span class="track-number">${index + 1}</span>
             <div class="track-title-info" onclick="abrirDetalhesMusica(${t.id})">
-                <h4>${t.title}</h4>
-                <p>${album.artist?.name || 'Artista'}</p>
+                <h4>${esc(t.title)}</h4>
+                <p>${esc(album.artist?.name || 'Artista')}</p>
             </div>
             <audio controls src="${t.preview || ''}"></audio>
             <button class="btn-secondary" onclick="abrirDetalhesMusica(${t.id})">Ver Letra</button>
@@ -608,8 +663,8 @@ function carregarComentariosMusica(id) {
                     </div>
                 </div>
             </div>
-            <p style="color: #e0e0e0; margin: 0; font-style: italic; font-size: 0.9rem;">"${aval.resenha}"</p>
-            <small style="color: #aaa; font-size: 0.75rem; display: block; margin-top: 6px;">${aval.data}</small>
+            <p style="color: #e0e0e0; margin: 0; font-style: italic; font-size: 0.9rem;">"${esc(aval.resenha)}"</p>
+            <small style="color: #aaa; font-size: 0.75rem; display: block; margin-top: 6px;">${esc(aval.data)}</small>
         `;
         lista.appendChild(boxReview);
     }
@@ -619,7 +674,7 @@ function carregarComentariosMusica(id) {
         item.style.cssText = 'position: relative; background: rgba(255, 255, 255, 0.05); padding: 10px 12px; border-radius: 8px; margin-bottom: 8px;';
         item.innerHTML = `
             <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                <p style="margin: 0; color: #ddd; font-size: 0.88rem; flex: 1;">${c.texto}</p>
+                <p style="margin: 0; color: #ddd; font-size: 0.88rem; flex: 1;">${esc(c.texto)}</p>
                 <div class="comentario-menu-wrapper" style="position: relative;">
                     <button onclick="alternarMenuComentario(event, 'comentario_${id}_${index}')" style="background: none; border: none; color: #aaa; cursor: pointer; font-size: 1.1rem; padding: 0 4px; height: auto;">⋮</button>
                     <div id="dropdown_comentario_${id}_${index}" class="comentario-dropdown" style="display: none; position: absolute; right: 0; top: 20px; background: #222; border: 1px solid #444; border-radius: 6px; z-index: 10; min-width: 140px; box-shadow: 0 4px 10px rgba(0,0,0,0.5);">
@@ -627,7 +682,7 @@ function carregarComentariosMusica(id) {
                     </div>
                 </div>
             </div>
-            <small style="color: #888; font-size: 0.7rem; display: block; margin-top: 4px;">${c.data}</small>
+            <small style="color: #888; font-size: 0.7rem; display: block; margin-top: 4px;">${esc(c.data)}</small>
         `;
         lista.appendChild(item);
     });
@@ -734,6 +789,7 @@ function confirmarAvaliacao() {
         id: musicaAtualParaAvaliar.id,
         titulo: musicaAtualParaAvaliar.title,
         artista: musicaAtualParaAvaliar.artist?.name || 'Artista',
+        album: musicaAtualParaAvaliar.album?.title || '',
         capa: capaUrl,
         nota: notaSelecionada,
         resenha: texto,
@@ -748,8 +804,11 @@ function confirmarAvaliacao() {
 
     salvarDados();
     fecharModal();
-    carregarHome();
-    
+
+    if (document.getElementById('secaoBusca')?.style.display !== 'none') {
+        carregarHome();
+    }
+
     if (document.getElementById('secaoPerfil')?.style.display === 'block') {
         renderizarPerfil();
     }
@@ -770,7 +829,11 @@ function renderizarPerfil() {
     const favCountEl = document.getElementById('statFavCount');
 
     if (songsCountEl) songsCountEl.innerText = avaliacoes.length;
-    
+
+    const albunsUnicos = new Set(avaliacoes.map(a => a.album).filter(Boolean));
+    const albumsCountEl = document.getElementById('statCountAlbums');
+    if (albumsCountEl) albumsCountEl.innerText = albunsUnicos.size;
+
     const media = avaliacoes.length ? (avaliacoes.reduce((acc, c) => acc + c.nota, 0) / avaliacoes.length).toFixed(1) : '0.0';
     if (avgRatingEl) avgRatingEl.innerText = media;
 
@@ -780,48 +843,105 @@ function renderizarPerfil() {
     trocarSubAbaPerfil('reviews');
 }
 
+function renderizarListaAvaliacoes(body, lista, mensagemVazia) {
+    if (lista.length === 0) {
+        body.innerHTML = `<p style="color: var(--texto-secundario); grid-column: 1/-1;">${mensagemVazia}</p>`;
+        return;
+    }
+
+    lista.forEach(a => {
+        const card = document.createElement('div');
+        card.className = 'card-musica';
+        card.style.cssText = 'width: 100%; text-align: left; margin-bottom: 1rem; padding: 1.2rem; background: rgba(255,255,255,0.05); border-radius: 12px;';
+
+        const estrelasHTML = '★'.repeat(a.nota) + '☆'.repeat(5 - a.nota);
+
+        card.innerHTML = `
+            <div style="display:flex; gap:1rem; align-items:flex-start;">
+                <img src="${a.capa}" style="width:80px; height:80px; border-radius:8px; object-fit:cover; cursor:pointer;" onclick="abrirDetalhesMusica(${a.id})">
+                <div style="flex:1;">
+                    <h3 style="cursor:pointer; margin: 0 0 0.3rem 0; color: #fff;" onclick="abrirDetalhesMusica(${a.id})">${esc(a.titulo)}</h3>
+                    <p class="artista-nome" style="margin:0; color: #aaa;">${esc(a.artista)}</p>
+                    <div style="color: var(--cor-dourado, #ffd700); margin: 0.4rem 0; font-size:1.1rem;">${estrelasHTML}</div>
+                    <p style="font-size: 0.75rem; color: #888; margin:0;">Avaliado em ${esc(a.data)}</p>
+                </div>
+            </div>
+            ${a.resenha ? `
+            <div style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0, 0, 0, 0.3); border-radius: 8px; font-size: 0.9rem; line-height: 1.4; color: #e0e0e0; border-left: 3px solid var(--cor-principal, #8a2be2);">
+                <strong style="color: #fff; font-size: 0.8rem; text-transform: uppercase;">Minha Review:</strong>
+                <p style="margin: 0.3rem 0 0 0; font-style: italic;">"${esc(a.resenha)}"</p>
+            </div>` : ''}
+        `;
+        body.appendChild(card);
+    });
+}
+
 function trocarSubAbaPerfil(aba) {
     document.querySelectorAll('.profile-subtabs button').forEach(b => b.classList.remove('ativa'));
     const body = document.getElementById('profileTabContent');
     if (!body) return;
-    
+
     body.innerHTML = '';
 
+    const botoes = { reviews: 'pTabReviews', favorites: 'pTabFavorites', stats: 'pTabStats' };
+    document.getElementById(botoes[aba])?.classList.add('ativa');
+
     if (aba === 'reviews') {
-        const btnTabReviews = document.getElementById('pTabReviews');
-        if (btnTabReviews) btnTabReviews.classList.add('ativa');
-        
-        if (avaliacoes.length === 0) {
-            body.innerHTML = '<p style="color: var(--texto-secundario); grid-column: 1/-1;">Você ainda não fez nenhuma avaliação.</p>';
+        renderizarListaAvaliacoes(body, avaliacoes, 'Você ainda não fez nenhuma avaliação.');
+    } else if (aba === 'favorites') {
+        renderizarListaAvaliacoes(body, avaliacoes.filter(a => a.nota >= 4), 'Nenhuma favorita ainda (avalie com 4 ou 5 estrelas).');
+    } else if (aba === 'stats') {
+        const total = avaliacoes.length;
+        if (total === 0) {
+            body.innerHTML = '<p style="color: var(--texto-secundario);">Avalie algumas músicas para ver suas estatísticas.</p>';
             return;
         }
-
-        avaliacoes.forEach(a => {
-            const card = document.createElement('div');
-            card.className = 'card-musica';
-            card.style.cssText = 'width: 100%; text-align: left; margin-bottom: 1rem; padding: 1.2rem; background: rgba(255,255,255,0.05); border-radius: 12px;';
-
-            const estrelasHTML = '★'.repeat(a.nota) + '☆'.repeat(5 - a.nota);
-
-            card.innerHTML = `
-                <div style="display:flex; gap:1rem; align-items:flex-start;">
-                    <img src="${a.capa}" style="width:80px; height:80px; border-radius:8px; object-fit:cover; cursor:pointer;" onclick="abrirDetalhesMusica(${a.id})">
-                    <div style="flex:1;">
-                        <h3 style="cursor:pointer; margin: 0 0 0.3rem 0; color: #fff;" onclick="abrirDetalhesMusica(${a.id})">${a.titulo}</h3>
-                        <p class="artista-nome" style="margin:0; color: #aaa;">${a.artista}</p>
-                        <div style="color: var(--cor-dourado, #ffd700); margin: 0.4rem 0; font-size:1.1rem;">${estrelasHTML}</div>
-                        <p style="font-size: 0.75rem; color: #888; margin:0;">Avaliado em ${a.data}</p>
-                    </div>
+        const distribuicao = [1, 2, 3, 4, 5].map(n => avaliacoes.filter(a => a.nota === n).length);
+        body.innerHTML = distribuicao.map((qtd, i) => `
+            <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+                <span style="width:60px; color: var(--cor-dourado, #ffd700);">${'★'.repeat(i + 1)}</span>
+                <div style="flex:1; background: rgba(255,255,255,0.08); border-radius:6px; height:12px;">
+                    <div style="width:${Math.round((qtd / total) * 100)}%; background: var(--cor-principal, #8a2be2); height:100%; border-radius:6px;"></div>
                 </div>
-                ${a.resenha ? `
-                <div style="margin-top: 0.8rem; padding: 0.8rem 1rem; background: rgba(0, 0, 0, 0.3); border-radius: 8px; font-size: 0.9rem; line-height: 1.4; color: #e0e0e0; border-left: 3px solid var(--cor-principal, #8a2be2);">
-                    <strong style="color: #fff; font-size: 0.8rem; text-transform: uppercase;">Minha Review:</strong>
-                    <p style="margin: 0.3rem 0 0 0; font-style: italic;">"${a.resenha}"</p>
-                </div>` : ''}
-            `;
-            body.appendChild(card);
-        });
+                <span style="width:30px; text-align:right; color:#aaa;">${qtd}</span>
+            </div>
+        `).join('');
     }
+}
+
+async function alternarAba(aba) {
+    document.getElementById('abaMusicas')?.classList.toggle('ativa', aba === 'musicas');
+    document.getElementById('abaAlbuns')?.classList.toggle('ativa', aba === 'albuns');
+
+    const grid = document.getElementById('resultadosBusca');
+    if (!grid || !ultimaBusca) return;
+
+    if (aba === 'musicas') {
+        return buscar();
+    }
+
+    grid.innerHTML = '<p style="color: var(--texto-secundario); grid-column: 1/-1;">Carregando álbuns...</p>';
+    const data = await fazerRequisicaoDeezer(`search/album?q=${encodeURIComponent(ultimaBusca)}`);
+    grid.innerHTML = '';
+
+    const listaAlbuns = data?.data || [];
+    if (listaAlbuns.length === 0) {
+        grid.innerHTML = '<p style="color: var(--texto-secundario); grid-column: 1/-1;">Nenhum álbum encontrado.</p>';
+        return;
+    }
+
+    listaAlbuns.forEach(alb => {
+        const card = document.createElement('div');
+        card.className = 'card-musica';
+        card.style.cursor = 'pointer';
+        card.onclick = () => abrirDetalhesAlbumPorId(alb.id);
+        card.innerHTML = `
+            <img src="${alb.cover_medium || alb.cover}" style="width:100%; border-radius:12px;" alt="Capa">
+            <h3>${esc(alb.title)}</h3>
+            <p class="artista-nome">${esc(alb.artist?.name || '')}</p>
+        `;
+        grid.appendChild(card);
+    });
 }
 
 function abrirModalEditProfile() {
@@ -839,6 +959,13 @@ function abrirModalEditProfile() {
 function fecharModalEditProfile() {
     const modalEdit = document.getElementById('modalEditProfile');
     if (modalEdit) modalEdit.style.display = 'none';
+}
+
+function removerFotoPerfil() {
+    const editAvatar = document.getElementById('editProfileAvatarPreview');
+    if (editAvatar) {
+        editAvatar.src = 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=300&q=80';
+    }
 }
 
 function previewImagemUpload(e) {
@@ -878,8 +1005,8 @@ function renderizarFavoritos() {
         card.className = 'card-musica';
         card.innerHTML = `
             <img src="${a.capa}" style="width:100%; border-radius:12px; margin-bottom:0.5rem; cursor:pointer;" onclick="abrirDetalhesMusica(${a.id})" alt="Capa">
-            <h3 style="cursor:pointer;" onclick="abrirDetalhesMusica(${a.id})">${a.titulo}</h3>
-            <p class="artista-nome">${a.artista}</p>
+            <h3 style="cursor:pointer;" onclick="abrirDetalhesMusica(${a.id})">${esc(a.titulo)}</h3>
+            <p class="artista-nome">${esc(a.artista)}</p>
             <div style="color: var(--cor-dourado, #ffd700); margin-bottom: 0.5rem;">${'★'.repeat(a.nota)}</div>
             <button class="btn-remover" onclick="removerAvaliacao(${a.id})">Remover</button>
         `;

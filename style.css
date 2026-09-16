@@ -1,115 +1,346 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root {
+  --bg-principal: #0f1017;
+  --superficie-card: #191827;
+  --cor-principal: #8b5cf6;
+  --cor-destaque: #f472b6;
+  --cor-dourado: #fbbf24;
+  --texto-principal: #f8f7fc;
+  --texto-secundario: #a6a3b5;
+  --elemento-lavanda: #c4b5fd;
+  --gradiente-accent: linear-gradient(135deg, #8b5cf6 0%, #f472b6 100%);
+  --sombra-card: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  --sombra-hover: 0 20px 40px -15px rgba(139, 92, 246, 0.3);
+
+  --fonte-logo: 'DM Serif Display', serif;
+  --fonte-titulos: 'Space Grotesk', sans-serif;
+  --fonte-corpo: 'Inter', sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
 body {
-    font-family: Arial, sans-serif;
-    background-color: #121212;
-    color: #ffffff;
-    margin: 0;
-    padding: 20px;
+  font-family: var(--fonte-corpo);
+  background-color: var(--bg-principal);
+  color: var(--texto-principal);
+  min-height: 100vh;
+  padding-bottom: 2rem;
+  line-height: 1.5;
 }
 
-.container {
-    max-width: 900px;
-    margin: 0 auto;
+.container { max-width: 1140px; margin: 0 auto; padding: 0 1rem; }
+.main-content-padding { padding-top: 1.5rem; }
+
+/* HEADER */
+.top-header {
+  background-color: rgba(25, 24, 39, 0.85);
+  backdrop-filter: blur(12px);
+  position: sticky; top: 0; z-index: 100;
+  border-bottom: 1px solid rgba(196, 181, 253, 0.1);
+  padding: 0.75rem 0;
 }
 
-h1, h2 {
-    text-align: center;
+.header-content { display: flex; justify-content: space-between; align-items: center; }
+
+.logo-text {
+  font-family: var(--fonte-logo);
+  font-size: 2.2rem;
+  background: var(--gradiente-accent);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  cursor: pointer;
 }
 
-.menu-navegacao {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    margin-bottom: 25px;
+.user-profile-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(196, 181, 253, 0.15);
+  padding: 0.4rem 0.8rem;
+  border-radius: 99px;
+  display: flex; align-items: center; gap: 0.6rem;
+  height: auto; cursor: pointer;
+  color: var(--texto-principal);
 }
+
+.avatar-sm { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
+
+/* NAVEGAÇÃO DESKTOP */
+.menu-navegacao { display: flex; justify-content: center; gap: 1rem; margin-bottom: 2rem; }
 
 .menu-navegacao button {
-    background-color: #282828;
+  background: var(--superficie-card);
+  color: var(--texto-principal);
+  border: 1px solid rgba(196, 181, 253, 0.1);
+  padding: 0.75rem 1.5rem;
+  border-radius: 99px;
+  font-weight: 600; cursor: pointer;
+  transition: all 0.3s ease;
+  font-family: var(--fonte-corpo);
 }
 
-.menu-navegacao button:hover {
-    background-color: #3e3e3e;
+.menu-navegacao button.active, .menu-navegacao button:hover {
+  border-color: var(--cor-principal);
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--elemento-lavanda);
 }
 
-.busca-box {
-    display: flex;
-    gap: 10px;
-    margin-bottom: 30px;
+/* CAIXA DE BUSCA E AUTOCOMPLETE */
+.busca-wrapper { position: relative; margin-bottom: 1.5rem; }
+.busca-box { display: flex; gap: 0.75rem; }
+
+input[type="text"], textarea {
+  background-color: var(--superficie-card);
+  border: 1px solid rgba(196, 181, 253, 0.15);
+  color: var(--texto-principal); border-radius: 12px;
+  padding: 0.8rem 1rem; font-size: 0.95rem; outline: none;
+  font-family: var(--fonte-corpo); width: 100%;
 }
 
-input {
-    flex: 1;
-    padding: 12px;
-    border-radius: 6px;
-    border: none;
-    font-size: 16px;
+input[type="text"] { flex: 1; height: 48px; }
+textarea { height: 90px; resize: none; margin-bottom: 1rem; }
+
+.sugestoes-dropdown {
+  position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+  background: #191827; border: 1px solid rgba(139, 92, 246, 0.3);
+  border-radius: 14px; box-shadow: 0 15px 35px rgba(0, 0, 0, 0.6);
+  z-index: 90; max-height: 320px; overflow-y: auto;
 }
 
-button {
-    padding: 12px 20px;
-    background-color: #1db954;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
+.sugestao-item {
+  display: flex; align-items: center; gap: 0.8rem;
+  padding: 0.6rem 1rem; cursor: pointer;
+  border-bottom: 1px solid rgba(196, 181, 253, 0.05); transition: background 0.2s ease;
 }
 
-button:hover {
-    background-color: #1ed760;
+.sugestao-item:hover { background: rgba(139, 92, 246, 0.15); }
+.sugestao-item img { width: 40px; height: 40px; border-radius: 8px; object-fit: cover; }
+.sugestao-info { display: flex; flex-direction: column; }
+.sugestao-title { font-family: var(--fonte-titulos); font-size: 0.9rem; font-weight: 700; color: var(--texto-principal); }
+.sugestao-artist { font-size: 0.75rem; color: var(--texto-secundario); }
+
+/* CARROSSEIS & SETAS */
+.secao-carrossel { margin-bottom: 2.5rem; }
+.secao-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.8rem; }
+.secao-header h2 { font-family: var(--fonte-titulos); font-size: 1.4rem; font-weight: 700; color: var(--texto-principal); }
+.carrossel-setas { display: flex; gap: 0.5rem; }
+
+.carrossel-setas button {
+  width: 34px; height: 34px; border-radius: 50%;
+  background: rgba(255, 255, 255, 0.06); border: 1px solid rgba(196, 181, 253, 0.15);
+  color: var(--texto-principal); font-size: 0.9rem; display: flex; align-items: center; justify-content: center;
+  padding: 0; cursor: pointer; transition: all 0.2s ease;
 }
 
-.grid-musicas {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 20px;
+.carrossel-setas button:hover {
+  background: var(--cor-principal); color: #fff; border-color: var(--cor-principal); transform: scale(1.08);
 }
+
+.carrossel-linha {
+  display: flex; gap: 1.25rem; overflow-x: auto; padding: 0.5rem 0.2rem 1.2rem 0.2rem; scroll-behavior: smooth;
+}
+
+.carrossel-linha::-webkit-scrollbar { height: 6px; }
+.carrossel-linha::-webkit-scrollbar-track { background: rgba(255,255,255,0.03); border-radius: 10px; }
+.carrossel-linha::-webkit-scrollbar-thumb { background: rgba(196,181,253,0.2); border-radius: 10px; }
+.carrossel-linha .card-musica { min-width: 200px; max-width: 200px; flex-shrink: 0; }
+
+.grid-musicas { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 1.5rem; }
 
 .card-musica {
-    background-color: #181818;
-    padding: 15px;
-    border-radius: 8px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    text-align: center;
+  background-color: var(--superficie-card); border: 1px solid rgba(196, 181, 253, 0.08);
+  border-radius: 16px; padding: 1rem; display: flex; flex-direction: column; align-items: center; text-align: center;
+  box-shadow: var(--sombra-card); transition: all 0.3s ease;
 }
 
-.card-musica img {
-    width: 100%;
-    border-radius: 6px;
-    margin-bottom: 10px;
+.card-musica:hover {
+  transform: translateY(-6px); box-shadow: var(--sombra-hover); border-color: rgba(139, 92, 246, 0.3);
+}
+
+.capa-container { position: relative; width: 100%; margin-bottom: 0.8rem; cursor: pointer; }
+.capa-container img { width: 100%; aspect-ratio: 1/1; object-fit: cover; border-radius: 12px; }
+
+.badge-explicit {
+  position: absolute; bottom: 6px; right: 6px; background: rgba(239, 68, 68, 0.9);
+  color: #fff; font-size: 0.6rem; font-weight: 800; padding: 2px 5px; border-radius: 4px;
 }
 
 .card-musica h3 {
-    font-size: 15px;
-    margin: 5px 0;
+  font-family: var(--fonte-titulos); font-size: 0.95rem; font-weight: 700;
+  color: var(--texto-principal); margin-bottom: 0.2rem; width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer;
 }
 
-.card-musica p {
-    font-size: 13px;
-    color: #b3b3b3;
-    margin-bottom: 10px;
+.card-musica p.artista-nome {
+  font-family: var(--fonte-titulos); font-size: 0.8rem; color: var(--texto-secundario); margin-bottom: 0.5rem;
+  width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
+/* PLAYER AUDIO */
+audio {
+  width: 100%; height: 36px; margin-bottom: 0.8rem; border-radius: 99px;
+  background-color: #191827; border: 1px solid rgba(139, 92, 246, 0.35); outline: none;
+}
+
+/* DETALHES DA MÚSICA & LETRA */
+.musica-detalhe-box {
+  display: flex; gap: 2rem; align-items: center; background: var(--superficie-card);
+  padding: 2rem; border-radius: 20px; border: 1px solid rgba(196, 181, 253, 0.1); margin-bottom: 2rem;
+}
+
+.musica-detalhe-capa { width: 200px; height: 200px; border-radius: 16px; object-fit: cover; box-shadow: 0 15px 35px rgba(0,0,0,0.5); }
+.musica-detalhe-info { display: flex; flex-direction: column; gap: 0.5rem; flex: 1; }
+.musica-detalhe-info h2 { font-family: var(--fonte-titulos); font-size: 2.2rem; font-weight: 800; color: var(--texto-principal); }
+
+/* LINK DO ÁLBUM CLICÁVEL */
+.texto-album-link {
+  color: var(--elemento-lavanda);
+  cursor: pointer;
+  font-size: 0.95rem;
+  display: inline-block;
+  margin-top: 0.2rem;
+  transition: all 0.2s ease;
+}
+
+.texto-album-link:hover {
+  color: var(--cor-destaque);
+  text-decoration: underline;
+}
+
+.detalhe-player-container { margin-top: 0.5rem; max-width: 400px; }
+.musica-conteudo-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 1.5rem; }
+.card-painel-secao { background: var(--superficie-card); border: 1px solid rgba(196, 181, 253, 0.1); border-radius: 18px; padding: 1.5rem; }
+.card-painel-secao h3 { font-family: var(--fonte-titulos); font-size: 1.2rem; margin-bottom: 1rem; }
+
+.letra-conteudo-texto {
+  font-family: var(--fonte-corpo); color: var(--texto-secundario); white-space: pre-line;
+  line-height: 1.8; font-size: 0.95rem; max-height: 450px; overflow-y: auto; padding-right: 0.5rem;
+}
+
+.comentarios-lista-container { display: flex; flex-direction: column; gap: 0.75rem; max-height: 200px; overflow-y: auto; margin-bottom: 1rem; }
+.comentario-item { background: rgba(15, 16, 23, 0.5); border: 1px solid rgba(196, 181, 253, 0.05); padding: 0.8rem; border-radius: 10px; font-size: 0.85rem; }
+.comentario-item small { display: block; color: var(--texto-secundario); margin-top: 0.3rem; font-size: 0.7rem; }
+
+/* ÁLBUM DETALHES */
+.btn-voltar { margin-bottom: 1.5rem; height: 38px; padding: 0 1rem; }
+.album-header-box { display: flex; gap: 2rem; align-items: flex-end; background: var(--superficie-card); padding: 2rem; border-radius: 20px; border: 1px solid rgba(196, 181, 253, 0.1); margin-bottom: 2rem; }
+.album-cover-lg { width: 180px; height: 180px; border-radius: 14px; object-fit: cover; }
+.album-info-details { display: flex; flex-direction: column; gap: 0.4rem; }
+.album-info-details .badge-tag { font-size: 0.75rem; font-weight: 700; color: var(--cor-destaque); text-transform: uppercase; }
+.album-info-details h2 { font-family: var(--fonte-titulos); font-size: 2.2rem; font-weight: 800; color: var(--texto-principal); }
+.album-info-details p { font-family: var(--fonte-titulos); font-size: 1rem; color: var(--texto-secundario); }
+
+.album-tracks-title { font-family: var(--fonte-titulos); font-size: 1.3rem; margin-bottom: 1rem; }
+.album-tracks-list { display: flex; flex-direction: column; gap: 0.75rem; }
+
+.track-item-row {
+  display: grid; grid-template-columns: 40px 1fr 180px 110px; align-items: center; gap: 1rem;
+  background: var(--superficie-card); padding: 0.8rem 1.2rem; border-radius: 12px; border: 1px solid rgba(196, 181, 253, 0.05);
+}
+
+.track-item-row:hover { background: rgba(139, 92, 246, 0.1); border-color: rgba(139, 92, 246, 0.3); }
+.track-number { font-family: var(--fonte-titulos); font-weight: 700; color: var(--texto-secundario); text-align: center; }
+.track-title-info { cursor: pointer; }
+.track-title-info h4 { font-family: var(--fonte-titulos); font-size: 0.95rem; color: var(--texto-principal); }
+.track-title-info p { font-size: 0.8rem; color: var(--texto-secundario); }
+.track-item-row audio { margin-bottom: 0; }
+
+/* PERFIL */
+.profile-card-header { background: var(--superficie-card); border-radius: 20px; border: 1px solid rgba(196, 181, 253, 0.12); overflow: hidden; margin-bottom: 2rem; }
+.profile-banner { height: 140px; background: linear-gradient(135deg, #3b0764 0%, #1e1b4b 100%); }
+.profile-header-details { padding: 0 2rem 1.5rem 2rem; display: flex; gap: 1.5rem; align-items: flex-end; margin-top: -50px; }
+.profile-avatar-wrapper img { width: 100px; height: 100px; border-radius: 50%; border: 4px solid var(--superficie-card); object-fit: cover; background: var(--bg-principal); }
+.profile-user-info { flex: 1; display: flex; flex-direction: column; gap: 0.3rem; }
+.profile-titles h2 { text-align: left; margin-bottom: 0; font-size: 1.6rem; }
+.profile-bio { color: var(--texto-secundario); font-size: 0.88rem; margin-top: 0.2rem; }
+
+.profile-stats-bar { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid rgba(196, 181, 253, 0.08); background: rgba(15, 16, 23, 0.4); }
+.stat-box { padding: 1rem; text-align: center; border-right: 1px solid rgba(196, 181, 253, 0.08); }
+.stat-box:last-child { border-right: none; }
+.stat-value { display: block; font-family: var(--fonte-titulos); font-size: 1.4rem; font-weight: 700; color: var(--cor-destaque); }
+.stat-label { font-size: 0.75rem; color: var(--texto-secundario); }
+
+/* BOTÕES & FORMULÁRIOS */
+button {
+  height: 44px; background: var(--gradiente-accent); color: #fff;
+  border: none; border-radius: 12px; padding: 0 1.2rem;
+  font-weight: 700; font-size: 0.88rem; cursor: pointer; transition: all 0.25s ease; font-family: var(--fonte-corpo);
+}
+
+button:hover { opacity: 0.95; transform: translateY(-2px); }
+.btn-secondary { background: rgba(255, 255, 255, 0.08); color: var(--texto-principal); border: 1px solid rgba(196, 181, 253, 0.2); }
+.btn-remover { width: 100%; height: 38px; background: rgba(239, 68, 68, 0.12); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); font-size: 0.8rem; }
+.btn-remover:hover { background: #ef4444; color: #fff; }
+
+/* MODAIS */
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15, 16, 23, 0.85); backdrop-filter: blur(8px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal-conteudo { background: var(--superficie-card); border: 1px solid rgba(196, 181, 253, 0.2); padding: 2rem; border-radius: 20px; width: 90%; max-width: 420px; position: relative; }
+.fechar-modal { position: absolute; top: 1rem; right: 1.2rem; font-size: 1.5rem; color: var(--texto-secundario); cursor: pointer; }
+.estrelas-input { display: flex; justify-content: center; gap: 0.5rem; font-size: 2rem; cursor: pointer; margin: 1rem 0; }
+.estrelas-input span { color: rgba(166, 163, 181, 0.3); }
+
+.avatar-edit-preview { display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.avatar-edit-preview img { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; }
+.modal-actions { display: flex; justify-content: flex-end; gap: 0.75rem; margin-top: 1rem; }
+
+/* ABAS */
+.abas-container { display: flex; justify-content: center; gap: 0.5rem; margin-bottom: 1.5rem; }
+.aba-btn { height: 36px; background: transparent; border: 1px solid transparent; color: var(--texto-secundario); padding: 0 1rem; border-radius: 99px; font-size: 0.85rem; }
+.aba-btn.ativa { background: rgba(139, 92, 246, 0.15); color: var(--elemento-lavanda); border-color: rgba(139, 92, 246, 0.4); }
+
+/* MOBILE */
+.mobile-bottom-nav { display: none !important; }
+
+@media (max-width: 768px) {
+  body { padding-bottom: 80px; }
+  .desktop-only { display: none !important; }
+  
+  .mobile-bottom-nav {
+    display: flex !important; position: fixed; bottom: 0; left: 0; right: 0;
+    background: rgba(25, 24, 39, 0.95); backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(196, 181, 253, 0.15); justify-content: space-around; padding: 0.6rem 0; z-index: 99;
+  }
+
+  .mobile-bottom-nav button { background: transparent; flex-direction: column; height: auto; font-size: 0.85rem; padding: 0; color: var(--texto-secundario); }
+  .musica-detalhe-box { flex-direction: column; align-items: center; text-align: center; }
+  .musica-conteudo-grid { grid-template-columns: 1fr; }
+  .musica-detalhe-capa { width: 150px; height: 150px; }
+  .album-header-box { flex-direction: column; align-items: center; text-align: center; }
+  .track-item-row { grid-template-columns: 30px 1fr 90px; }
+  .track-item-row audio { display: none; }
+  .profile-header-details { flex-direction: column; align-items: center; text-align: center; }
+  .profile-titles h2 { text-align: center; }
+  .profile-stats-bar { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ESTILIZAÇÃO PERSONALIZADA DO PLAYER DE ÁUDIO ROXO */
 audio {
     width: 100%;
-    margin-bottom: 10px;
+    height: 38px;
+    margin-top: 0.6rem;
+    border-radius: 20px;
+    outline: none;
+    background-color: #2b1d3d;
 }
 
-.btn-favoritar {
-    width: 100%;
-    background-color: #333;
+/* Personalização para navegadores baseados em Chromium/WebKit (Chrome, Edge, Opera, Safari) */
+audio::-webkit-media-controls-panel {
+    background-color: #2b1d3d;
+    border-radius: 20px;
 }
 
-.btn-favoritar:hover {
-    background-color: #555;
+audio::-webkit-media-controls-play-button,
+audio::-webkit-media-controls-mute-button {
+    background-color: #ffffff;
+    border-radius: 50%;
 }
 
-.btn-remover {
-    width: 100%;
-    background-color: #e74c3c;
+audio::-webkit-media-controls-current-time-display,
+audio::-webkit-media-controls-time-remaining-display {
+    color: #ffffff;
+    font-size: 0.75rem;
 }
 
-.btn-remover:hover {
-    background-color: #c0392b;
+audio::-webkit-media-controls-timeline {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    margin: 0 8px;
 }

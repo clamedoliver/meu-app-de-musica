@@ -7,25 +7,285 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>Meu Catálogo de Músicas</h1>
-        
-        <div class="menu-navegacao">
-            <button onclick="mostrarBusca()">🔍 Buscar Músicas</button>
-            <button onclick="mostrarFavoritos()">❤️ Minhas Favoritas</button>
-        </div>
+    <!-- Header Principal -->
+    <header class="top-header">
+        <div class="header-content container">
+            <h1 class="logo-text" onclick="navegarPara('home')">Meu Catálogo</h1>
 
-        <div id="secaoBusca">
-            <div class="busca-box">
-                <input type="text" id="campoBusca" placeholder="Digite o nome da música ou artista...">
-                <button onclick="buscar()">Pesquisar</button>
+            <button class="user-profile-btn" onclick="navegarPara('perfil')">
+                <img id="headerAvatar" src="" alt="Avatar" class="avatar-sm">
+                <span id="headerName">Meu Perfil</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="container main-content-padding">
+
+        <!-- Navegação Desktop -->
+        <nav class="menu-navegacao desktop-only">
+            <button id="navBtnHome" class="active" onclick="navegarPara('home')">Descobrir</button>
+            <button id="navBtnFavs" onclick="navegarPara('favoritos')">Minhas Avaliações</button>
+            <button id="navBtnPerfil" onclick="navegarPara('perfil')">Meu Painel</button>
+        </nav>
+
+        <!-- SEÇÃO: HOME / DESCOBRIR -->
+        <main id="secaoBusca" class="secao-view">
+            <div class="busca-wrapper">
+                <div class="busca-box">
+                    <input type="text" id="campoBusca" placeholder="Digite uma música, artista ou álbum..." autocomplete="off" oninput="lidarComInputBusca(event)">
+                    <button onclick="buscar()">Pesquisar</button>
+                </div>
+                <!-- Menu de Sugestões Instantâneas (Autocomplete) -->
+                <div id="sugestoesContainer" class="sugestoes-dropdown" style="display: none;"></div>
             </div>
-            <div id="resultados" class="grid-musicas"></div>
+
+            <div class="abas-container" id="abasContainer" style="display: none;">
+                <button class="aba-btn ativa" id="abaMusicas" onclick="alternarAba('musicas')">Músicas</button>
+                <button class="aba-btn" id="abaAlbuns" onclick="alternarAba('albuns')">Álbuns</button>
+            </div>
+
+            <div id="resultadosBusca" class="grid-musicas" style="display: none;"></div>
+
+            <!-- Carrosséis da Home -->
+            <div id="secoesHome">
+                <div class="secao-carrossel">
+                    <div class="secao-header">
+                        <h2>Top Brasil</h2>
+                        <div class="carrossel-setas">
+                            <button onclick="rolarCarrossel('topBrasil', -300)" aria-label="Anterior">❮</button>
+                            <button onclick="rolarCarrossel('topBrasil', 300)" aria-label="Próximo">❯</button>
+                        </div>
+                    </div>
+                    <div class="carrossel-linha" id="topBrasil"></div>
+                </div>
+
+                <div class="secao-carrossel">
+                    <div class="secao-header">
+                        <h2>Top Mundial</h2>
+                        <div class="carrossel-setas">
+                            <button onclick="rolarCarrossel('topMundial', -300)" aria-label="Anterior">❮</button>
+                            <button onclick="rolarCarrossel('topMundial', 300)" aria-label="Próximo">❯</button>
+                        </div>
+                    </div>
+                    <div class="carrossel-linha" id="topMundial"></div>
+                </div>
+
+                <div class="secao-carrossel">
+                    <div class="secao-header">
+                        <h2 id="tituloRecomendados">Recomendados para Você</h2>
+                        <div class="carrossel-setas">
+                            <button onclick="rolarCarrossel('populares', -300)" aria-label="Anterior">❮</button>
+                            <button onclick="rolarCarrossel('populares', 300)" aria-label="Próximo">❯</button>
+                        </div>
+                    </div>
+                    <div class="carrossel-linha" id="populares"></div>
+                </div>
+
+                <div class="secao-carrossel">
+                    <div class="secao-header">
+                        <h2>Lançamentos & Tendências</h2>
+                        <div class="carrossel-setas">
+                            <button onclick="rolarCarrossel('lancamentos', -300)" aria-label="Anterior">❮</button>
+                            <button onclick="rolarCarrossel('lancamentos', 300)" aria-label="Próximo">❯</button>
+                        </div>
+                    </div>
+                    <div class="carrossel-linha" id="lancamentos"></div>
+                </div>
+            </div>
+            <!-- VISÃO: DETALHES DO ARTISTA -->
+<section id="secaoArtistaDetalhe" class="secao-view" style="display: none;">
+    <button class="btn-voltar" onclick="voltarParaBusca()">← Voltar</button>
+    
+    <div id="artistaHeaderContainer" class="album-header">
+        <!-- Preenchido via JavaScript -->
+    </div>
+
+    <div class="detalhes-conteudo">
+        <h3>Músicas Mais Populares</h3>
+        <div id="artistaTopTracksList" class="album-tracks-list">
+            <!-- Preenchido via JavaScript -->
         </div>
 
-        <div id="secaoFavoritos" style="display: none;">
-            <h2>Músicas Salvas</h2>
+        <h3 style="margin-top: 2rem;">Álbuns</h3>
+        <div id="artistaAlbumsGrid" class="carrossel-container">
+            <!-- Preenchido via JavaScript -->
+        </div>
+    </div>
+</section>
+        </main>
+
+        <!-- SEÇÃO: DETALHES DA MÚSICA & LETRA -->
+        <section id="secaoMusicaDetalhe" class="secao-view" style="display: none;">
+            <button class="btn-secondary btn-voltar" onclick="voltarParaOrigem()">← Voltar</button>
+            
+            <div class="musica-detalhe-box">
+                <img id="detalheCapa" src="" alt="Capa" class="musica-detalhe-capa">
+                <div class="musica-detalhe-info">
+                    <span class="badge-tag">Música</span>
+                    <h2 id="detalheTitulo">Título da Música</h2>
+                    <p id="detalheArtista">Artista</p>
+                    <p id="detalheAlbumNome" class="texto-album-link" onclick="redirecionarParaAlbumAtual()">💿 Álbum: <span id="detalheAlbumNomeTexto"></span></p>
+                    
+                    <div class="detalhe-player-container">
+                        <audio id="detalheAudioPlayer" controls src=""></audio>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid de Conteúdo: Letra + Comentários -->
+            <div class="musica-conteudo-grid">
+                <!-- Coluna da Letra -->
+                <div class="card-painel-secao">
+                    <h3>📜 Letra da Música</h3>
+                    <div id="detalheLetraContainer" class="letra-conteudo-texto">
+                        Carregando letra...
+                    </div>
+                </div>
+
+                <!-- Coluna de Créditos e Comentários / Diário -->
+                <div class="coluna-lateral-detalhe">
+                    <div class="card-painel-secao" style="margin-bottom: 1.5rem;">
+                        <h3>✍️ Créditos e Autoria</h3>
+                        <p id="detalheAutores" style="color: var(--texto-secundario); font-size: 0.9rem;">
+                            Carregando informações de autoria...
+                        </p>
+                    </div>
+
+                    <div class="card-painel-secao">
+                        <h3>💬 Seus Comentários / Diário</h3>
+                        <div id="comentariosLista" class="comentarios-lista-container">
+                            <!-- Comentários salvos aparecem aqui -->
+                        </div>
+                        <div class="form-group" style="margin-top: 1rem;">
+                            <textarea id="novoComentarioTexto" placeholder="Escreva um comentário ou anotação sobre esta música..."></textarea>
+                            <button onclick="adicionarComentarioMusica()">Publicar Comentário</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SEÇÃO: DETALHES DO ÁLBUM -->
+        <section id="secaoAlbumDetalhe" class="secao-view" style="display: none;">
+            <button class="btn-secondary btn-voltar" onclick="voltarParaBusca()">← Voltar</button>
+            
+            <div id="albumHeaderContainer" class="album-header-box"></div>
+
+            <h3 class="album-tracks-title">Faixas do Álbum</h3>
+            <div id="albumTracksList" class="album-tracks-list"></div>
+        </section>
+
+        <!-- SEÇÃO: MINHAS AVALIAÇÕES -->
+        <section id="secaoFavoritos" class="secao-view" style="display: none;">
+            <h2>Minhas Avaliações</h2>
             <div id="listaFavoritos" class="grid-musicas"></div>
+        </section>
+
+        <!-- SEÇÃO: MEU PAINEL / PERFIL PESSOAL -->
+        <section id="secaoPerfil" class="secao-view" style="display: none;">
+            <div class="profile-card-header">
+                <div class="profile-banner" id="profileBanner"></div>
+                <div class="profile-header-details">
+                    <div class="profile-avatar-wrapper">
+                        <img id="profileAvatarImg" src="" alt="Foto de Perfil">
+                    </div>
+                    <div class="profile-user-info">
+                        <div class="profile-titles">
+                            <h2 id="profileDisplayName">Meu Nome</h2>
+                        </div>
+                        <p id="profileBioText" class="profile-bio">Seu diário pessoal de música.</p>
+                        <button class="btn-secondary" onclick="abrirModalEditProfile()">Personalizar Perfil</button>
+                    </div>
+                </div>
+
+                <div class="profile-stats-bar">
+                    <div class="stat-box">
+                        <span class="stat-value" id="statCountSongs">0</span>
+                        <span class="stat-label">Músicas Avaliadas</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="statCountAlbums">0</span>
+                        <span class="stat-label">Álbuns Ouvidos</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="statAvgRating">0.0</span>
+                        <span class="stat-label">Nota Média (0-10)</span>
+                    </div>
+                    <div class="stat-box">
+                        <span class="stat-value" id="statFavCount">0</span>
+                        <span class="stat-label">Favoritas (4-5 ★)</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="abas-container profile-subtabs">
+                <button class="aba-btn ativa" id="pTabReviews" onclick="trocarSubAbaPerfil('reviews')">Minhas Resenhas</button>
+                <button class="aba-btn" id="pTabFavorites" onclick="trocarSubAbaPerfil('favorites')">Favoritas</button>
+                <button class="aba-btn" id="pTabStats" onclick="trocarSubAbaPerfil('stats')">Estatísticas</button>
+            </div>
+
+            <div id="profileTabContent" class="profile-tab-body"></div>
+        </section>
+
+    </div>
+
+    <!-- Navegação Mobile Exclusiva -->
+    <div class="mobile-bottom-nav">
+        <button onclick="navegarPara('home')">Descobrir</button>
+        <button onclick="navegarPara('favoritos')">Avaliações</button>
+        <button onclick="navegarPara('perfil')">Meu Painel</button>
+    </div>
+
+    <!-- Modal de Avaliação -->
+    <div id="modalResenha" class="modal" style="display: none;">
+        <div class="modal-conteudo">
+            <span class="fechar-modal" onclick="fecharModal()">&times;</span>
+            <h3 id="modalTituloMusica">Avaliar Música</h3>
+            
+            <div class="estrelas-input">
+                <span onclick="selecionarEstrelas(1)">★</span>
+                <span onclick="selecionarEstrelas(2)">★</span>
+                <span onclick="selecionarEstrelas(3)">★</span>
+                <span onclick="selecionarEstrelas(4)">★</span>
+                <span onclick="selecionarEstrelas(5)">★</span>
+            </div>
+
+            <textarea id="textoResenha" placeholder="Escreva suas impressões sobre esta música..."></textarea>
+            <button onclick="confirmarAvaliacao()">Salvar Avaliação</button>
+        </div>
+    </div>
+
+    <!-- Modal Editar Perfil -->
+    <div id="modalEditProfile" class="modal" style="display: none;">
+        <div class="modal-conteudo">
+            <span class="fechar-modal" onclick="fecharModalEditProfile()">&times;</span>
+            <h3>Personalizar Meu Perfil</h3>
+
+            <div class="form-group">
+                <label>Sua Foto</label>
+                <div class="avatar-edit-preview">
+                    <img id="editProfileAvatarPreview" src="" alt="Preview">
+                    <div>
+                        <input type="file" id="inputAvatarFile" accept="image/*" onchange="previewImagemUpload(event)">
+                        <button class="btn-secondary btn-sm" onclick="removerFotoPerfil()">Remover Foto</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Seu Nome</label>
+                <input type="text" id="editProfileName">
+            </div>
+
+            <div class="form-group">
+                <label>Sua Bio / Frase</label>
+                <textarea id="editProfileBio" placeholder="Sua descrição pessoal..."></textarea>
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn-secondary" onclick="fecharModalEditProfile()">Cancelar</button>
+                <button onclick="salvarModalPerfil()">Salvar Alterações</button>
+            </div>
         </div>
     </div>
 
